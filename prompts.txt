@@ -1,0 +1,55 @@
+# Bingo prompts: one prompt per line, one square each.
+# Lines starting with # are comments; blank lines are ignored.
+# The FIRST prompt is always the centre square on every sheet.
+# You need at least 25 prompts: the centre one plus 24 more.
+#
+# Optional: change the version number below to give EVERYONE a fresh sheet
+# next time they open the page (e.g. for a new event).
+# version: 1
+
+FREE
+Someone says "Can you hear me?"
+A pet appears on camera
+Someone is still on mute
+"Let's take this offline"
+Someone joins late
+Coffee spill
+"Circle back"
+Somebody laughs at their own joke
+Background noise from construction
+"Sorry, you go ahead"
+Someone shares the wrong screen
+A phone rings
+Meeting runs over time
+"Quick question…"
+Someone eats on camera
+Frozen video
+"Synergy"
+Someone forgets the agenda
+A child walks into the room
+"Per my last email"
+Someone has a cold
+Two people talk at once
+"Let's park that"
+Someone wears a hat
+Weather is mentioned
+Someone references a sports game
+"Low-hanging fruit"
+Wi-Fi drops out
+Someone says "Happy Friday" (not Friday)
+Echo on the call
+"Let's touch base"
+New acronym nobody knows
+Someone is walking during the call
+"Deep dive"
+Snack brought to the meeting
+Someone apologises for being late
+"Bandwidth"
+Someone is wearing headphones
+"Moving forward"
+Someone yawns
+A plant visible in background
+"Game changer"
+Someone has a virtual background
+"Does that make sense?"
+Calendar invite gets updated
