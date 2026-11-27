@@ -4,6 +4,7 @@
 
 import { SIZE, CENTER } from "./config.js";
 import { winningCells, progressText } from "./sheet.js";
+import { tokenBreakPoints } from "./hyphenate.js";
 
 export async function savePicture(sheet) {
   const canvas = drawSheet(sheet);
@@ -11,13 +12,13 @@ export async function savePicture(sheet) {
   if (!blob) throw new Error("Could not create the picture");
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const filename = `bingo-${stamp}.png`;
+  const filename = `commander-bingo-${stamp}.png`;
   const file = new File([blob], filename, { type: "image/png" });
 
   const isPhone = matchMedia("(pointer: coarse)").matches;
   if (isPhone && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: "My bingo sheet" });
+      await navigator.share({ files: [file], title: "My Commander Bingo sheet" });
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // user closed the share sheet
@@ -39,7 +40,7 @@ function drawSheet(sheet) {
   const family = getComputedStyle(document.body).fontFamily;
 
   const W = 1080, pad = 60, gap = 14;
-  const gridTop = 190;
+  const gridTop = 240;
   const cell = (W - pad * 2 - gap * (SIZE - 1)) / SIZE;
   const gridH = cell * SIZE + gap * (SIZE - 1);
   const H = gridTop + gridH + 110;
@@ -51,20 +52,25 @@ function drawSheet(sheet) {
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Title: BIN + GO in the accent colour
+  // Title: "THE COMMANDER" above BIN + GO in the accent colour
   ctx.textBaseline = "alphabetic";
+  ctx.font = `900 36px ${family}`;
+  ctx.fillStyle = c.muted;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "5px";
+  ctx.fillText("THE COMMANDER", pad, 92);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
   ctx.font = `900 96px ${family}`;
   ctx.fillStyle = c.ink;
-  ctx.fillText("BIN", pad, 140);
+  ctx.fillText("BIN", pad, 190);
   const binW = ctx.measureText("BIN").width;
   ctx.fillStyle = c.accent;
-  ctx.fillText("GO", pad + binW, 140);
+  ctx.fillText("GO", pad + binW, 190);
 
   // Progress, right-aligned
   ctx.textAlign = "right";
   ctx.font = `600 34px ${family}`;
   ctx.fillStyle = c.muted;
-  ctx.fillText(progressText(sheet), W - pad, 130);
+  ctx.fillText(progressText(sheet), W - pad, 180);
   ctx.textAlign = "left";
 
   const win = winningCells(sheet);
@@ -121,41 +127,67 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Splits text into lines that fit maxW; very long words are broken by letter
-function wrapLines(ctx, text, maxW) {
+// Splits text into lines that fit maxW. With `hyphenate`, long words may be split
+// at a syllable break ("over-" / "powered"); words that still don't fit are broken by letter.
+function wrapLines(ctx, text, maxW, hyphenate) {
+  const fits = s => ctx.measureText(s).width <= maxW;
   const lines = [];
   let line = "";
-  for (const word of text.split(/\s+/)) {
-    const parts = [];
-    if (ctx.measureText(word).width <= maxW) parts.push(word);
-    else {
-      let chunk = "";
-      for (const ch of word) {
-        if (ctx.measureText(chunk + ch + "-").width > maxW && chunk) { parts.push(chunk + "-"); chunk = ""; }
-        chunk += ch;
+  const push = part => {
+    const test = line ? line + " " + part : part;
+    if (fits(test) || !line) line = test;
+    else { lines.push(line); line = part; }
+  };
+  for (let word of text.split(/\s+/).filter(Boolean)) {
+    if (hyphenate) {
+      // Fill the rest of the current line with as much of the word as fits
+      while (!fits(line ? line + " " + word : word)) {
+        const room = line ? line + " " : "";
+        const p = tokenBreakPoints(word).reverse().find(p => fits(room + word.slice(0, p) + "-"));
+        if (p === undefined) {
+          if (!line) break;       // nothing fits even on an empty line
+          lines.push(line); line = ""; // try again on a fresh line
+          continue;
+        }
+        lines.push(room + word.slice(0, p) + "-");
+        line = "";
+        word = word.slice(p);
       }
-      if (chunk) parts.push(chunk);
     }
-    for (const part of parts) {
-      const test = line ? line + " " + part : part;
-      if (ctx.measureText(test).width <= maxW || !line) line = test;
-      else { lines.push(line); line = part; }
+    if (fits(word)) { push(word); continue; }
+    lines.letterBroken = true;
+    let chunk = "";
+    for (const ch of word) {
+      if (!fits(chunk + ch + "-") && chunk) { push(chunk + "-"); chunk = ""; }
+      chunk += ch;
     }
+    if (chunk) push(chunk);
   }
   if (line) lines.push(line);
   return lines;
 }
 
-// Largest font size (with wrapping) that fits the box
+// Largest font size that fits the box. Splitting words with a hyphen is only used
+// when it keeps the text noticeably bigger than fitting whole words.
 function fitText(ctx, text, family, weight, start, maxW, maxH) {
-  for (let size = start; size >= 12; size -= 1) {
-    ctx.font = `${weight} ${size}px ${family}`;
-    const wordsFit = text.split(/\s+/).every(w => ctx.measureText(w).width <= maxW);
-    const lines = wrapLines(ctx, text, maxW);
-    if (wordsFit && lines.length * size * 1.15 <= maxH) return { size, lines };
+  const best = hyphenate => {
+    for (let size = start; size >= 12; size -= 1) {
+      ctx.font = `${weight} ${size}px ${family}`;
+      const lines = wrapLines(ctx, text, maxW, hyphenate);
+      const clean = !lines.letterBroken && lines.every(l => ctx.measureText(l).width <= maxW);
+      if (clean && lines.length * size * 1.15 <= maxH) return { size, lines };
+    }
+    return null;
+  };
+  const plain = best(false);
+  const hy = best(true);
+  const pick = hy && (!plain || hy.size >= plain.size * 1.2) ? hy : plain;
+  if (pick) {
+    ctx.font = `${weight} ${pick.size}px ${family}`;
+    return pick;
   }
   ctx.font = `${weight} 12px ${family}`;
-  return { size: 12, lines: wrapLines(ctx, text, maxW) };
+  return { size: 12, lines: wrapLines(ctx, text, maxW, true) };
 }
 
 function downloadBlob(blob, filename) {
