@@ -12,13 +12,13 @@ export async function savePicture(sheet) {
   if (!blob) throw new Error("Could not create the picture");
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const filename = `bingo-${stamp}.png`;
+  const filename = `commander-bingo-${stamp}.png`;
   const file = new File([blob], filename, { type: "image/png" });
 
   const isPhone = matchMedia("(pointer: coarse)").matches;
   if (isPhone && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: "My bingo sheet" });
+      await navigator.share({ files: [file], title: "My Commander Bingo sheet" });
       return;
     } catch (err) {
       if (err && err.name === "AbortError") return; // user closed the share sheet
@@ -40,7 +40,7 @@ function drawSheet(sheet) {
   const family = getComputedStyle(document.body).fontFamily;
 
   const W = 1080, pad = 60, gap = 14;
-  const gridTop = 190;
+  const gridTop = 240;
   const cell = (W - pad * 2 - gap * (SIZE - 1)) / SIZE;
   const gridH = cell * SIZE + gap * (SIZE - 1);
   const H = gridTop + gridH + 110;
@@ -52,20 +52,25 @@ function drawSheet(sheet) {
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Title: BIN + GO in the accent colour
+  // Title: "THE COMMANDER" above BIN + GO in the accent colour
   ctx.textBaseline = "alphabetic";
+  ctx.font = `900 36px ${family}`;
+  ctx.fillStyle = c.muted;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "5px";
+  ctx.fillText("THE COMMANDER", pad, 92);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
   ctx.font = `900 96px ${family}`;
   ctx.fillStyle = c.ink;
-  ctx.fillText("BIN", pad, 140);
+  ctx.fillText("BIN", pad, 190);
   const binW = ctx.measureText("BIN").width;
   ctx.fillStyle = c.accent;
-  ctx.fillText("GO", pad + binW, 140);
+  ctx.fillText("GO", pad + binW, 190);
 
   // Progress, right-aligned
   ctx.textAlign = "right";
   ctx.font = `600 34px ${family}`;
   ctx.fillStyle = c.muted;
-  ctx.fillText(progressText(sheet), W - pad, 130);
+  ctx.fillText(progressText(sheet), W - pad, 180);
   ctx.textAlign = "left";
 
   const win = winningCells(sheet);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bingo</title>
+<title>The Commander Bingo</title>
 <script src="js/theme-init.js"></script>
 <style>
   :root {
@@ -62,6 +62,14 @@
     font-weight: 900;
   }
   h1 span { color: var(--accent); }
+  h1 small {
+    display: block;
+    font-size: 0.36em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.1em;
+  }
   #progress { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .header-right { display: flex; align-items: center; gap: 10px; align-self: center; }
   #theme {
@@ -196,7 +204,7 @@
 </head>
 <body>
   <header>
-    <h1>BIN<span>GO</span></h1>
+    <h1><small>The Commander</small>BIN<span>GO</span></h1>
     <div class="header-right">
       <div id="progress" aria-live="polite"></div>
       <button id="theme" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
@@ -206,7 +214,7 @@
     </div>
   </header>
 
-  <main id="board" role="grid" aria-label="Bingo sheet"></main>
+  <main id="board" role="grid" aria-label="The Commander Bingo sheet"></main>
 
   <div class="controls">
     <button class="btn" id="save" type="button">
