@@ -52,25 +52,26 @@ function drawSheet(sheet) {
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Title: "THE COMMANDER" above BIN + GO in the accent colour
+  // Title: big "THE COMMANDER" above a small BIN + GO (GO in the accent colour)
   ctx.textBaseline = "alphabetic";
-  ctx.font = `900 36px ${family}`;
-  ctx.fillStyle = c.muted;
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "5px";
-  ctx.fillText("THE COMMANDER", pad, 92);
-  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
-  ctx.font = `900 96px ${family}`;
+  ctx.font = `900 80px ${family}`;
   ctx.fillStyle = c.ink;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "3px";
+  ctx.fillText("THE COMMANDER", pad, 130);
+  ctx.font = `900 36px ${family}`;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "5px";
+  ctx.fillStyle = c.muted;
   ctx.fillText("BIN", pad, 190);
   const binW = ctx.measureText("BIN").width;
   ctx.fillStyle = c.accent;
   ctx.fillText("GO", pad + binW, 190);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
 
   // Progress, right-aligned
   ctx.textAlign = "right";
   ctx.font = `600 34px ${family}`;
   ctx.fillStyle = c.muted;
-  ctx.fillText(progressText(sheet), W - pad, 180);
+  ctx.fillText(progressText(sheet), W - pad, 190);
   ctx.textAlign = "left";
 
   const win = winningCells(sheet);
